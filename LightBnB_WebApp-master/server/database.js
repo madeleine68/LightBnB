@@ -1,8 +1,7 @@
 const properties = require('./json/properties.json');
 const users = require('./json/users.json');
-
-
 const { Pool } = require('pg');
+
 const pool = new Pool({
   user: 'vagrant',
   password: '123',
@@ -18,14 +17,12 @@ const pool = new Pool({
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithEmail = function(email) {
-    const emailQuery = `
-    SELECT * 
-    FROM users
-    WHERE email = $1`;
-    return pool.query(emailQuery, [email])
-    .then(result => result.rows[0])
-    .catch(err => err.message);
-}
+  return pool.query('SELECT * from users where email = $1;', [email])
+    .then(
+      res => res.rows[0],
+      rej => null
+    );
+};
 exports.getUserWithEmail = getUserWithEmail;
 
 /**
@@ -33,15 +30,14 @@ exports.getUserWithEmail = getUserWithEmail;
  * @param {string} id The id of the user.
  * @return {Promise<{}>} A promise to the user.
  */
+
 const getUserWithId = function(id) {
-  const idQuery = `
-  SELECT *
-  FROM users
-  WHERE id = $1`;
-  return pool.query (idQuery,[id] )
-  .then (result => result.rows[0])
-  .catch(err => err.message)
-}
+  return pool.query('SELECT * FROM users WHERE id = $1;', [id]).
+  then(
+    res => res.rows[0],
+    rej => null
+  );
+};
 exports.getUserWithId = getUserWithId;
 
 
@@ -50,17 +46,18 @@ exports.getUserWithId = getUserWithId;
  * @param {{name: string, password: string, email: string}} user
  * @return {Promise<{}>} A promise to the user.
  */
-const addUser =  function(user) {
+const addUser = function(user) {
+  const newUsername = user.name;
+  const newUserEmail = user.email;
+  const newUserPassword = user.password;
 
-  const values = [user.name, users.email, user.password];
-  return pool.query (`INSERT INTO users(name, email, password)
-  VALUES ($1, $2, $3)
-  RETURNING *;`, values)
-  .then (result => {
-    result.rows
-    console.log("added to user")
-  })
-  .catch(err => err.message)
+  return pool.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *;', [newUsername, newUserEmail, newUserPassword]).then(res => {
+      userAdded = res.rows[0];
+      console.log(`Added to users: ${user.name}`);
+    },
+    rej => {
+      console.log('Unable to add to database');
+    });
 }
 exports.addUser = addUser;
 
@@ -72,7 +69,10 @@ exports.addUser = addUser;
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function(guest_id, limit = 10) {
-  return getAllProperties(null, 2);
+  pool.query('SELECT * FROM reservations WHERE guest_id = $1 LIMIT 10', [guest_id, limit])
+  .then(res => res.row[0],
+        rej => null)
+  
 }
 exports.getAllReservations = getAllReservations;
 
