@@ -161,4 +161,4 @@ const addProperty = function(property) {
     return res.rows;
   })
 }
-exports.addProperty = addProperty;
+exports.addProperty = addProperty
